@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Post Generator — Trigger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Type */
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    --font-size-body: 14px;
+    --font-size-label: 11px;
+    --font-size-input: 15px;
+    --font-size-header: 22px;
+    --font-size-eyebrow: 11px;
+
+    /* Colors — "signal panel": ink navy + brass, not the default cream/serif or near-black/acid-green */
+    --color-background: #0E1720;
+    --color-card-bg: #141F2A;
+    --color-card-border: #263542;
+    --color-card-shadow: rgba(0, 0, 0, 0.35);
+
+    --color-accent: #D98E4A;
+    --color-accent-soft: #E8B978;
+    --color-accent-dim: rgba(217, 142, 74, 0.14);
+
+    --color-text: #EDEFF2;
+    --color-label: #8FA0AC;
+    --color-input-text: #EDEFF2;
+    --color-input-placeholder: #55636D;
+    --color-input-border: #2C3B47;
+    --color-focus-border: #D98E4A;
+
+    --color-status-idle: #55636D;
+    --color-status-armed: #6FBE8F;
+
+    --color-error: #E8695A;
+    --color-required: #D98E4A;
+
+    /* Radii */
+    --border-radius-card: 14px;
+    --border-radius-input: 8px;
+    --border-radius-pill: 999px;
+
+    /* Spacing */
+    --padding-card: 32px;
+    --padding-form-input: 13px 14px;
+    --gap-field: 22px;
+
+    /* Dimensions */
+    --container-width: 480px;
+    --submit-btn-height: 52px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(217,142,74,0.06), transparent 45%),
+      var(--color-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    font-family: var(--font-body);
+  }
+
+  .card {
+    width: 100%;
+    max-width: var(--container-width);
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--border-radius-card);
+    box-shadow: 0 20px 60px var(--color-card-shadow);
+    padding: var(--padding-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    opacity: 0.7;
+  }
+
+  /* Status strip — signature element: signals the workflow's live state */
+  .status-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-eyebrow);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-status-armed);
+    margin-bottom: 18px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-status-armed);
+    box-shadow: 0 0 0 0 rgba(111,190,143,0.6);
+    animation: pulse 2.2s infinite;
+  }
+
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(111,190,143,0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(111,190,143,0); }
+    100% { box-shadow: 0 0 0 0 rgba(111,190,143,0); }
+  }
+
+  header {
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--font-size-header);
+    color: var(--color-text);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    margin: 0;
+    font-size: var(--font-size-body);
+    color: var(--color-label);
+    line-height: 1.5;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-field);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+
+  label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-label);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  label .tag {
+    color: var(--color-accent-soft);
+  }
+
+  label .req { color: var(--color-required); }
+
+  label .hint {
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: var(--font-body);
+    color: #5C6B77;
+    font-weight: 400;
+    margin-left: auto;
+    font-size: 11px;
+  }
+
+  input[type="text"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: var(--font-size-input);
+    color: var(--color-input-text);
+    background: #0F1922;
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--border-radius-input);
+    padding: var(--padding-form-input);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--color-input-placeholder);
+  }
+
+  textarea {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--color-focus-border);
+    box-shadow: 0 0 0 3px var(--color-accent-dim);
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238FA0AC' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .tone-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .tone-option {
+    position: relative;
+  }
+
+  .tone-option input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    cursor: pointer;
+  }
+
+  .tone-option span {
+    display: block;
+    text-align: center;
+    padding: 11px 8px;
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--border-radius-input);
+    font-size: 13px;
+    color: var(--color-label);
+    transition: all 0.15s ease;
+  }
+
+  .tone-option input:checked + span {
+    border-color: var(--color-accent);
+    color: var(--color-accent-soft);
+    background: var(--color-accent-dim);
+  }
+
+  .cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #0F1922;
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--border-radius-input);
+  }
+
+  .cta-row .cta-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    color: var(--color-text);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .switch input { opacity: 0; width: 0; height: 0; }
+
+  .switch .track {
+    position: absolute;
+    inset: 0;
+    background: #2C3B47;
+    border-radius: var(--border-radius-pill);
+    transition: background 0.15s ease;
+    cursor: pointer;
+  }
+
+  .switch .track::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: #EDEFF2;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+  }
+
+  .switch input:checked + .track {
+    background: var(--color-accent);
+  }
+
+  .switch input:checked + .track::before {
+    transform: translateX(18px);
+  }
+
+  button[type="submit"] {
+    margin-top: 4px;
+    height: var(--submit-btn-height);
+    border: none;
+    border-radius: var(--border-radius-input);
+    background: var(--color-accent);
+    color: #14100A;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  button[type="submit"]:hover {
+    background: var(--color-accent-soft);
+  }
+
+  button[type="submit"]:active {
+    transform: scale(0.99);
+  }
+
+  button[type="submit"] svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .footnote {
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #46545F;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .status-dot { animation: none; }
+  }
+
+  @media (max-width: 420px) {
+    .card { padding: 24px; }
+    .tone-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="status-strip">
+      <span class="status-dot"></span>
+      Pipeline armed — n8n webhook ready
+    </div>
+
+    <header>
+      <h1>Queue a LinkedIn post</h1>
+      <p>Fill this in and it fires straight into the content pipeline — draft, image, and schedule handled downstream.</p>
+    </header>
+
+    <form id="triggerForm">
+      <div class="field">
+        <label for="name"><span class="tag">&gt;&gt;</span> Your name <span class="req">*</span></label>
+        <input type="text" id="name" name="name" placeholder="e.g. Amber" required>
+      </div>
+
+      <div class="field">
+        <label for="email"><span class="tag">&gt;&gt;</span> Email <span class="hint">post lands here when it's ready</span> <span class="req">*</span></label>
+        <input type="text" id="email" name="email" placeholder="you@boardroombaker.com" required>
+      </div>
+
+      <div class="field">
+        <label for="topic"><span class="tag">&gt;&gt;</span> Topic <span class="req">*</span></label>
+        <textarea id="topic" name="topic" placeholder="e.g. Why most n8n automations fail at the QA step, not the build step" required></textarea>
+      </div>
+
+      <div class="field">
+        <label><span class="tag">&gt;&gt;</span> Tone</label>
+        <div class="tone-grid">
+          <label class="tone-option">
+            <input type="radio" name="tone" value="professional" checked>
+            <span>Professional</span>
+          </label>
+          <label class="tone-option">
+            <input type="radio" name="tone" value="bold">
+            <span>Bold / opinionated</span>
+          </label>
+          <label class="tone-option">
+            <input type="radio" name="tone" value="conversational">
+            <span>Conversational</span>
+          </label>
+          <label class="tone-option">
+            <input type="radio" name="tone" value="thought-leader">
+            <span>Thought leader</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="audience"><span class="tag">&gt;&gt;</span> Audience <span class="hint">optional</span></label>
+        <input type="text" id="audience" name="audience" placeholder="e.g. small business owners exploring automation">
+      </div>
+
+      <div class="field">
+        <div class="cta-row">
+          <span class="cta-label">Include a call-to-action line</span>
+          <div class="switch">
+            <input type="checkbox" id="cta" name="includeCta" checked>
+            <label class="track" for="cta"></label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit">
+        Send to pipeline
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </form>
+
+    <div class="footnote">POST → n8n.srv1803116.hstgr.cloud/webhook/linkedin-generate · live</div>
+  </div>
+
+  <script>
+    const WEBHOOK_URL = "https://n8n.srv1803116.hstgr.cloud/webhook/linkedin-generate";
+
+    document.getElementById('triggerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "Sending…";
+
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+      payload.includeCta = document.getElementById('cta').checked;
+
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        btn.innerHTML = "Queued ✓";
+      } catch (err) {
+        btn.innerHTML = "Error — retry";
+      } finally {
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = original; }, 2000);
+      }
+    });
+  </script>
+
+</body>
+</html>
