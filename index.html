@@ -453,6 +453,7 @@
           body: JSON.stringify(payload)
         });
         btn.innerHTML = "Submitted ✓";
+        e.target.reset();
       } catch (err) {
         btn.innerHTML = "Error — retry";
       } finally {
