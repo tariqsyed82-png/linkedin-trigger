@@ -360,25 +360,21 @@
 <body>
 
   <div class="card">
-    <div class="status-strip">
-      <span class="status-dot"></span>
-      Pipeline armed — n8n webhook ready
-    </div>
 
     <header>
-      <h1>Queue a LinkedIn post</h1>
-      <p>Fill this in and it fires straight into the content pipeline — draft, image, and schedule handled downstream.</p>
+      <h1>LinkedIn Companion</h1>
+      <p>Share a topic and a few details, and we'll put together a polished LinkedIn post for you.</p>
     </header>
 
     <form id="triggerForm">
       <div class="field">
         <label for="name"><span class="tag">&gt;&gt;</span> Your name <span class="req">*</span></label>
-        <input type="text" id="name" name="name" placeholder="e.g. Amber" required>
+        <input type="text" id="name" name="name" placeholder="Your full name" required>
       </div>
 
       <div class="field">
         <label for="email"><span class="tag">&gt;&gt;</span> Email <span class="hint">post lands here when it's ready</span> <span class="req">*</span></label>
-        <input type="text" id="email" name="email" placeholder="you@boardroombaker.com" required>
+        <input type="text" id="email" name="email" placeholder="you@example.com" required>
       </div>
 
       <div class="field">
@@ -424,18 +420,17 @@
       </div>
 
       <button type="submit">
-        Send to pipeline
+        Submit
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
     </form>
-
-    <div class="footnote">POST → n8n.srv1803116.hstgr.cloud/webhook/linkedin-generate · live</div>
   </div>
 
   <script>
     const WEBHOOK_URL = "https://n8n.srv1803116.hstgr.cloud/webhook/linkedin-generate";
+    const TRIGGER_KEY = "JNqf74dMOi6H36RDwAaCIwPyUG2dRqte";
 
     document.getElementById('triggerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -451,10 +446,13 @@
       try {
         await fetch(WEBHOOK_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Trigger-Key": TRIGGER_KEY
+          },
           body: JSON.stringify(payload)
         });
-        btn.innerHTML = "Queued ✓";
+        btn.innerHTML = "Submitted ✓";
       } catch (err) {
         btn.innerHTML = "Error — retry";
       } finally {
